@@ -1,0 +1,56 @@
+###########################################################
+#                      RainBreakTorch                     #
+#                           1.0                           #
+###########################################################
+
+# Settings.
+settings:
+  # Insert hex or minimessage
+  # minimessage - for Paper, 1.18+.
+  # hex - This has been working since 1.16.5, but it also supports normal modes of operation.
+  translate: hex
+  # Functions.
+  functions:
+    # Worlds settings.
+    worlds:
+      # Insert allowed/blocked
+      type: blocked
+      # List of worlds for the type.
+      list:
+        - "no"
+    # Biomes settings.
+    biomes:
+      # Insert allowed/blocked
+      type: blocked
+      # List of biomes for the type.
+      list:
+        - "no"
+    # Torches break when it rains.
+    torches:
+      # Turn it on? true/false
+      enabled: true
+      # How many seconds does it take to delete an unnecessary object to prevent a leak? Leave the recommended value.
+      objectRemove: 30
+      # Blocks that are torches. Specify the material.
+      blocks:
+        - "TORCH"
+        - "WALL_TORCH"
+        - "REDSTONE_TORCH"
+        - "REDSTONE_WALL_TORCH"
+        - "CAMPFIRE"
+# Messages.
+messages:
+  # Actions:
+  # [message] message - Send a message to the player.
+  # [broadcast] message - Send a message to all players
+  # [player] command - Run the command on behalf of the player.
+  # [log] message - Send a message to the console.
+  # [delay] ticks - Make a delay between actions. In ticks. (20 ticks = 1 second)
+  # If there are no rights.
+  noperm:
+    - "[message] &cYou don't have enough rights."
+  help:
+    - "[message] &aHelp:"
+    - "[message] &a/rainbreaktorch reload &f- Reload the plugin configuration."
+    - "[message] &a/rainbreaktorch status &f- Get the plugin status."
+    - "[message] &a/rainbreaktorch update world &f- Get all the torches from the world."
