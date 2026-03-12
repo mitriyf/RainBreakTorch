@@ -20,6 +20,6 @@ public class BlockedWorlds implements WorldsList, BiomesList {
 
     @Override
     public boolean notContainsBiome(Biome biome) {
-        return values.getBiomes().contains(biome.name());
+        return values.getBiomes().contains(biome);
     }
 }

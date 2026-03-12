@@ -13,7 +13,7 @@ settings:
   functions:
     # Worlds settings.
     worlds:
-      # Insert allowed/blocked
+      # Insert allowed/blocked.
       type: blocked
       # List of worlds for the type.
       list:
@@ -27,8 +27,6 @@ settings:
         - "no"
     # Torches break when it rains.
     torches:
-      # Turn it on? true/false
-      enabled: true
       # How many seconds does it take to delete an unnecessary object to prevent a leak? Leave the recommended value.
       objectRemove: 30
       # Blocks that are torches. Specify the material.
@@ -53,4 +51,7 @@ messages:
     - "[message] &aHelp:"
     - "[message] &a/rainbreaktorch reload &f- Reload the plugin configuration."
     - "[message] &a/rainbreaktorch status &f- Get the plugin status."
-    - "[message] &a/rainbreaktorch update world &f- Get all the torches from the world."
+    - "[message] &a/rainbreaktorch update cancel &f- &cCanceling&f a previous task."
+    - "[message] &a/rainbreaktorch update active world &f- Get all the torches from the active chunks in the world."
+    - "[message] &a/rainbreaktorch update all world &f- Get all the torches from the the world."
+    - "[message] &cWarning! &eDo this if you have 1. loaded all the chunks and you need behavior for all the torches in the world, OR 2. you have already installed the plugin on a server with loaded chunks and player torches."

@@ -1,9 +1,7 @@
 package ru.mitriyf.rainbreaktorch.utils;
 
 import lombok.Getter;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.block.Biome;
+import org.bukkit.ChunkSnapshot;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -108,21 +106,9 @@ public class Utils {
     }
 
     public void saveTorch(Block block, boolean remove) {
-        World world = block.getWorld();
-        if (checkRules(world, block.getBiome())) {
-            return;
-        }
-        scheduler.runTaskAsynchronously(plugin, () -> torchUtils.saveTorch(world, block, block.getType(), remove));
-    }
-
-    public void saveTorchWithAsync(World world, Block block, Material material, boolean remove) {
-        if (checkRules(world, block.getBiome())) {
-            return;
-        }
-        torchUtils.saveTorch(world, block, material, remove);
-    }
-
-    public boolean checkRules(World world, Biome biome) {
-        return !values.isTorchesEnabled() || values.getWorldType().notContainsWorld(world) || (biome != null && values.getBiomeType().notContainsBiome(biome));
+        ChunkSnapshot snapshot = block.getChunk().getChunkSnapshot(true, true, false);
+        int x = block.getX() & 15;
+        int z = block.getZ() & 15;
+        scheduler.runTaskAsynchronously(plugin, () -> torchUtils.saveTorch(block.getWorld(), snapshot, x, block.getY(), z, block.getType(), remove));
     }
 }
