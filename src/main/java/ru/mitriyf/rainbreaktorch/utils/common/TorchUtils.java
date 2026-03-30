@@ -1,99 +1,106 @@
 package ru.mitriyf.rainbreaktorch.utils.common;
 
 import lombok.Getter;
-import org.bukkit.*;
-import org.bukkit.block.Biome;
-import org.bukkit.block.Block;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.Chunk;
+import org.bukkit.ChunkSnapshot;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.scheduler.BukkitScheduler;
 import ru.mitriyf.rainbreaktorch.RainBreakTorch;
 import ru.mitriyf.rainbreaktorch.utils.Utils;
 import ru.mitriyf.rainbreaktorch.utils.common.data.ChunkData;
 import ru.mitriyf.rainbreaktorch.utils.common.data.column.Column;
+import ru.mitriyf.rainbreaktorch.utils.tasks.DropTask;
+import ru.mitriyf.rainbreaktorch.utils.tasks.data.DropData;
 import ru.mitriyf.rainbreaktorch.values.Values;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TorchUtils {
     @Getter
+    private final Map<String, Set<String>> worldChunks = new ConcurrentHashMap<>();
+    @Getter
     private final Map<String, ChunkData> chunkData = new ConcurrentHashMap<>();
+    @Getter
+    private final Map<String, File> worldFiles = new ConcurrentHashMap<>();
     private final BukkitScheduler scheduler;
-    private final ThreadLocalRandom rnd;
     @Getter
     private final RainBreakTorch plugin;
-    private final ItemStack stick;
-    private final Logger logger;
     private final Values values;
     private final Utils utils;
+    @Getter
     private final File worlds;
+    private final int minValue;
 
     public TorchUtils(Utils utils, RainBreakTorch plugin) {
         this.utils = utils;
         this.plugin = plugin;
-        rnd = plugin.getRnd();
         values = plugin.getValues();
-        logger = plugin.getLogger();
-        stick = new ItemStack(Material.STICK);
+        minValue = Integer.MIN_VALUE;
         scheduler = plugin.getServer().getScheduler();
         worlds = values.getWorldsFile();
         for (World world : plugin.getServer().getWorlds()) {
-            updateChunksAsync(world);
+            String worldName = world.getName();
+            File worldChunksFile = new File(worlds, worldName);
+            if (!worldChunksFile.exists() && !worldChunksFile.mkdirs()) {
+                plugin.getLogger().warning("Error create mkdirs!");
+            }
+            worldFiles.put(worldName, worldChunksFile);
+            Set<String> chunks = ConcurrentHashMap.newKeySet();
+            File[] files = worldChunksFile.listFiles();
+            if (files != null) {
+                for (File fileName : files) {
+                    chunks.add(fileName.getName());
+                }
+            }
+            worldChunks.put(worldName, chunks);
+            updateChunksAsync(world, world.hasStorm());
         }
     }
 
-    private boolean checkRules(World world, Biome biome) {
-        return values.getWorldType().notContainsWorld(world) || values.getBiomeType().notContainsBiome(biome);
-    }
-
-    private File getChunkFile(String fileName, String worldName) {
-        File worldChunks = new File(worlds, worldName);
-        if (!worldChunks.exists() && !worldChunks.mkdirs()) {
-            logger.warning("Error create mkdirs!");
-        }
-        return new File(worldChunks, fileName);
-    }
-
-    private ChunkData getChunkData(File chunkFile, String fileName) {
-        ChunkData chunkDataValue = chunkData.computeIfAbsent(fileName, k -> new ChunkData(this, chunkFile, fileName));
+    private ChunkData getChunkData(String worldName, File chunkFile, String fileName) {
+        ChunkData chunkDataValue = chunkData.computeIfAbsent(fileName, k -> new ChunkData(this, worldName, chunkFile, fileName));
         chunkDataValue.getQueue().incrementAndGet();
         chunkDataValue.setActive(false);
         return chunkDataValue;
     }
 
-    public void saveTorch(World world, ChunkSnapshot snapshot, int x, int y, int z, Material material, boolean remove) {
-        if (checkRules(world, snapshot.getBiome(x, y, z))) {
-            return;
-        }
+    public void checkTorch(World world, Chunk chunk, ChunkSnapshot snapshot, int x, int y, int z, Material material, boolean isStorm, boolean remove) {
         boolean isTorch = values.getTorchesBlocks().contains(material);
         boolean isCheckHeight = false;
-        int chunkX = snapshot.getX();
-        int chunkZ = snapshot.getZ();
+        int chunkX, chunkZ;
+        if (snapshot != null) {
+            chunkX = snapshot.getX();
+            chunkZ = snapshot.getZ();
+        } else {
+            chunkX = chunk.getX();
+            chunkZ = chunk.getZ();
+        }
         int checkHeight = 0;
-        if (!remove && world.hasStorm()) {
+        if (!remove && isStorm) {
             if (!isTorch) {
                 return;
-            } else {
-                isCheckHeight = true;
-                checkHeight = checkHeight(world, snapshot, null, false, x, y, z);
-                if (checkHeight == y) {
-                    dropItems(world, chunkX * 16 + x, y, chunkZ * 16 + z);
-                    return;
-                }
+            }
+            isCheckHeight = true;
+            snapshot = snapshot != null ? snapshot : chunk.getChunkSnapshot(true, true, false);
+            checkHeight = checkHeight(world, snapshot, null, false, x, y, z);
+            if (checkHeight == y) {
+                dropItems(world, chunkX * 16 + x, y, chunkZ * 16 + z);
+                return;
             }
         }
         String fileName = chunkX + "_" + chunkZ + ".bin";
-        File chunkFile = getChunkFile(fileName, world.getName());
-        if (remove && !chunkFile.exists() && chunkData.get(fileName) == null) {
+        String worldName = world.getName();
+        File chunkFile = new File(worldFiles.get(worldName), fileName);
+        if (remove && chunkData.get(fileName) == null && !worldChunks.get(worldName).contains(fileName)) {
             return;
         }
-        ChunkData chunkDataValue = getChunkData(chunkFile, fileName);
+        ChunkData chunkDataValue = getChunkData(worldName, chunkFile, fileName);
         synchronized (chunkDataValue) {
             boolean changed, isFirst = true;
             boolean checkRemoveBlock = !isTorch && remove;
@@ -122,6 +129,7 @@ public class TorchUtils {
                 }
                 torchesSection.remove(y);
                 changed = true;
+                snapshot = snapshot != null ? snapshot : chunk.getChunkSnapshot(true, true, false);
                 checkHeight(world, snapshot, blocksSection, true, x, y, z);
             } else {
                 changed = true;
@@ -132,12 +140,13 @@ public class TorchUtils {
                         if (isCheckHeight) {
                             check(blocksSection, checkHeight);
                         } else {
+                            snapshot = snapshot != null ? snapshot : chunk.getChunkSnapshot(true, true, false);
                             checkHeight(world, snapshot, blocksSection, false, x, y, z);
                         }
                         isFirst = true;
                         changed = false;
                     }
-                } else if (material.isOccluding()) {
+                } else if (values.getType().isValid(material)) {
                     if (torchesSection.isEmpty()) {
                         exit(chunkDataValue, false);
                         return;
@@ -156,36 +165,38 @@ public class TorchUtils {
                     }
                 }
             }
-            exit(chunkDataValue, processTorchesY(world, locations, xSection, torchesSection, blocksSection, x, z, chunkX * 16 + x, chunkZ * 16 + z, changed, isFirst));
+            int realX = chunkX * 16 + x;
+            int realZ = chunkZ * 16 + z;
+            exit(chunkDataValue, processTorchesY(world, locations, xSection, torchesSection, blocksSection, x, z, realX, realZ, isStorm, changed, isFirst));
         }
     }
 
-    private void updateValues(World world, ChunkData chunkDataValue, int realChunkX, int realChunkZ) {
+    private void updateValues(World world, ChunkData chunkDataValue, int realChunkX, int realChunkZ, boolean isStorm) {
         Map<Integer, Map<Integer, Column>> locations = chunkDataValue.getLocations();
         if (locations.isEmpty()) {
             exit(chunkDataValue, false);
             return;
         }
         boolean changed = false;
-        for (Integer x : new ArrayList<>(locations.keySet())) {
+        for (Integer x : locations.keySet()) {
             Map<Integer, Column> xSection = locations.get(x);
             if (xSection == null) {
                 continue;
             }
-            for (Integer z : new ArrayList<>(xSection.keySet())) {
+            for (Integer z : xSection.keySet()) {
                 Column zSection = xSection.get(z);
                 if (zSection == null) {
                     continue;
                 }
                 Set<Integer> blocksSection = zSection.blocks;
                 Map<Integer, Boolean> torchesSection = zSection.torches;
-                changed = processTorchesY(world, locations, xSection, torchesSection, blocksSection, x, z, realChunkX + x, realChunkZ + z, changed, false);
+                changed = processTorchesY(world, locations, xSection, torchesSection, blocksSection, x, z, realChunkX + x, realChunkZ + z, isStorm, changed, false);
             }
         }
         exit(chunkDataValue, changed);
     }
 
-    private boolean processTorchesY(World world, Map<Integer, Map<Integer, Column>> locations, Map<Integer, Column> xSection, Map<Integer, Boolean> torchesSection, Set<Integer> blocksSection, int x, int z, int realX, int realZ, boolean changed, boolean isFirst) {
+    private boolean processTorchesY(World world, Map<Integer, Map<Integer, Column>> locations, Map<Integer, Column> xSection, Map<Integer, Boolean> torchesSection, Set<Integer> blocksSection, int x, int z, int realX, int realZ, boolean isStorm, boolean changed, boolean isFirst) {
         Set<Integer> torchesSet = torchesSection.keySet();
         if (torchesSet.isEmpty()) {
             clearSections(locations, xSection, x, z);
@@ -193,7 +204,8 @@ public class TorchUtils {
         }
         int yMax = getYMax(blocksSection);
         boolean yMaxClear = true;
-        for (Integer torch : new ArrayList<>(torchesSet)) {
+        for (Map.Entry<Integer, Boolean> entry : torchesSection.entrySet()) {
+            int torch = entry.getKey();
             boolean hasBlock = yMax > torch;
             boolean torchBoolean = torchesSection.getOrDefault(torch, false);
             if (hasBlock) {
@@ -211,7 +223,7 @@ public class TorchUtils {
                 }
             }
             if (!torchBoolean) {
-                if (world.hasStorm()) {
+                if (isStorm) {
                     if (!isFirst) {
                         changed = true;
                     }
@@ -231,8 +243,29 @@ public class TorchUtils {
         return changed;
     }
 
+    public void checkChunk(World world, ChunkSnapshot snapshot, int minHeight, int maxHeight, boolean isStorm, AtomicInteger foundSet) {
+        int found = 0;
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                for (int y = minHeight; y < maxHeight; y++) {
+                    Material material = utils.getRules().getBlockType(snapshot, x, y, z);
+                    if (material != Material.AIR && values.getTorchesBlocks().contains(material)) {
+                        found += 1;
+                        if (utils.checkRules(world, utils.getRules().getBiome(snapshot, x, y, z))) {
+                            continue;
+                        }
+                        checkTorch(world, null, snapshot, x, y, z, material, isStorm, false);
+                    }
+                }
+            }
+        }
+        if (foundSet != null && found > 0) {
+            foundSet.addAndGet(found);
+        }
+    }
+
     private int getYMax(Set<Integer> blocks) {
-        int yMax = Integer.MIN_VALUE;
+        int yMax = minValue;
         if (blocks.isEmpty()) {
             return yMax;
         }
@@ -241,10 +274,9 @@ public class TorchUtils {
                 yMax = block;
             }
         }
-        for (Integer block : new ArrayList<>(blocks)) {
-            if (block != yMax) {
-                blocks.remove(block);
-            }
+        blocks.clear();
+        if (minValue != yMax) {
+            blocks.add(yMax);
         }
         return yMax;
     }
@@ -260,38 +292,26 @@ public class TorchUtils {
         }
     }
 
-    private void updateChunk(Chunk chunk) {
-        World world = chunk.getWorld();
+    private void updateChunk(World world, Chunk chunk, boolean isStorm) {
         int chunkX = chunk.getX();
         int chunkZ = chunk.getZ();
         String fileName = chunkX + "_" + chunkZ + ".bin";
-        File chunkFile = getChunkFile(fileName, world.getName());
-        if (!chunkFile.exists() && chunkData.get(fileName) == null) {
+        String worldName = world.getName();
+        File chunkFile = new File(worldFiles.get(worldName), fileName);
+        if (!worldChunks.get(worldName).contains(fileName) && chunkData.get(fileName) == null) {
             return;
         }
-        ChunkData chunkDataValue = getChunkData(chunkFile, fileName);
-        updateValues(world, chunkDataValue, chunkX * 16, chunkZ * 16);
-    }
-
-    private void dropItems(World world, int x, int y, int z) {
-        scheduler.runTask(plugin, () -> {
-            Location location = new Location(world, x, y, z);
-            Block block = location.getBlock();
-            Material material = block.getType();
-            if (!values.getTorchesBlocks().contains(material)) {
-                return;
-            }
-            stick.setAmount(rnd.nextInt(2) + 1);
-            location.getBlock().setType(Material.AIR);
-            world.dropItem(location, stick);
-        });
+        ChunkData chunkDataValue = getChunkData(worldName, chunkFile, fileName);
+        synchronized (chunkDataValue) {
+            updateValues(world, chunkDataValue, chunkX * 16, chunkZ * 16, isStorm);
+        }
     }
 
     private int checkHeight(World world, ChunkSnapshot snapshot, Set<Integer> blocksSection, boolean checkDown, int x, int y, int z) {
         int maxHeight = snapshot.getHighestBlockYAt(x, z);
-        int minHeight = utils.isTemperature() ? 0 : world.getMinHeight();
+        int minHeight = utils.getMinHeight().get(world);
         int hasBlock = search(snapshot, blocksSection, maxHeight, 1, x, y, z);
-        if (hasBlock != y || !checkDown) {
+        if (hasBlock != y || !checkDown || y == minHeight) {
             return hasBlock;
         }
         return search(snapshot, blocksSection, minHeight, -1, x, y, z);
@@ -299,28 +319,38 @@ public class TorchUtils {
 
     private int search(ChunkSnapshot snapshot, Set<Integer> blocksSection, int height, int upInt, int x, int y, int z) {
         for (int i = y + upInt; upInt > 0 ? i <= height : i >= height; i = i + upInt) {
-            Material material = snapshot.getBlockType(x, i, z);
-            if (!values.getTorchesBlocks().contains(material) && material.isOccluding()) {
-                check(blocksSection, i);
+            Material material = utils.getRules().getBlockType(snapshot, x, i, z);
+            if (!values.getTorchesBlocks().contains(material) && values.getType().isValid(material)) {
+                utils.getTorchUtils().check(blocksSection, i);
                 return i;
             }
         }
         return y;
     }
 
-    private void check(Set<Integer> blocksSection, int y) {
+    public void check(Set<Integer> blocksSection, int y) {
         if (blocksSection != null) {
             blocksSection.add(y);
         }
     }
 
-    public void updateChunksAsync(World world) {
+    public void updateChunksAsync(World world, boolean isStorm) {
         Chunk[] chunks = world.getLoadedChunks();
         scheduler.runTaskAsynchronously(plugin, () -> {
             for (Chunk chunk : chunks) {
-                updateChunk(chunk);
+                updateChunk(world, chunk, isStorm);
             }
         });
+    }
+
+    private void dropItems(World world, int x, int y, int z) {
+        DropData data = new DropData(world, x, y, z);
+        DropTask dropTask = plugin.getDropTask();
+        dropTask.getDataList().add(data);
+        AtomicBoolean active = dropTask.getActive();
+        if (!active.get()) {
+            active.set(true);
+        }
     }
 
     private Map<Integer, Column> getXSection(Map<Integer, Map<Integer, Column>> locations, int x, boolean checkRemoveBlock) {
@@ -330,7 +360,7 @@ public class TorchUtils {
         } else if (checkRemoveBlock) {
             return null;
         }
-        xSection = new HashMap<>();
+        xSection = new ConcurrentHashMap<>();
         locations.put(x, xSection);
         return xSection;
     }
@@ -354,7 +384,8 @@ public class TorchUtils {
         }
     }
 
-    public void updateChunkAsync(Chunk chunk) {
-        scheduler.runTaskAsynchronously(plugin, () -> updateChunk(chunk));
+    public void updateChunkAsync(World world, Chunk chunk) {
+        boolean isStorm = world.hasStorm();
+        scheduler.runTaskAsynchronously(plugin, () -> updateChunk(world, chunk, isStorm));
     }
 }

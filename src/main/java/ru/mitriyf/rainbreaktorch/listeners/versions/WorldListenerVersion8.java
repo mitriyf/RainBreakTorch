@@ -17,7 +17,7 @@ public final class WorldListenerVersion8 implements Listener {
     @EventHandler
     public void Explode(BlockExplodeEvent e) {
         for (Block block : e.blockList()) {
-            utils.saveTorch(block, true);
+            utils.checkTorch(block, true);
         }
     }
 }

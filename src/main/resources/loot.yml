@@ -1,0 +1,28 @@
+# Items that drop from an item that was broken by rain.
+# In the loots section, specify the name of the new section belonging to the torch item and continue working as in the example.
+# You can add items yourself using Material or add unique items using the command.
+# You can see an example with Material from below, and through ItemStack through the player command.
+#
+# There is also a default section that indicates the loot for all torches.
+#
+# You can also add items using the command:
+# /rainbreaktorch loot - Get help with the loots subcommand.
+default:
+  stick:
+    item: STICK
+    location:
+      addX: 0.5
+      addY: 0
+      addZ: 0.5
+    amount: 1-1
+    chance: 100
+loot:
+  REDSTONE_TORCH:
+    redstoneItem:
+      item: REDSTONE
+      location:
+        addX: 0.5
+        addY: 0
+        addZ: 0.5
+      amount: 1-1
+      chance: 1

@@ -1,15 +1,30 @@
 package ru.mitriyf.rainbreaktorch.utils;
 
 import lombok.Getter;
-import org.bukkit.ChunkSnapshot;
+import org.bukkit.Chunk;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitScheduler;
 import ru.mitriyf.rainbreaktorch.RainBreakTorch;
 import ru.mitriyf.rainbreaktorch.utils.actions.Action;
 import ru.mitriyf.rainbreaktorch.utils.actions.ActionType;
+import ru.mitriyf.rainbreaktorch.utils.block.SetType;
+import ru.mitriyf.rainbreaktorch.utils.block.impl.SetType7;
+import ru.mitriyf.rainbreaktorch.utils.block.impl.SetType8;
 import ru.mitriyf.rainbreaktorch.utils.common.CommonUtils;
 import ru.mitriyf.rainbreaktorch.utils.common.TorchUtils;
+import ru.mitriyf.rainbreaktorch.utils.common.height.MinHeight;
+import ru.mitriyf.rainbreaktorch.utils.common.height.impl.MinHeight16;
+import ru.mitriyf.rainbreaktorch.utils.common.height.impl.MinHeight17;
+import ru.mitriyf.rainbreaktorch.utils.common.rules.Rules;
+import ru.mitriyf.rainbreaktorch.utils.common.rules.impl.Rules12;
+import ru.mitriyf.rainbreaktorch.utils.common.rules.impl.Rules13;
+import ru.mitriyf.rainbreaktorch.utils.hand.HandItem;
+import ru.mitriyf.rainbreaktorch.utils.hand.impl.HandItem8;
+import ru.mitriyf.rainbreaktorch.utils.hand.impl.HandItem9;
 import ru.mitriyf.rainbreaktorch.utils.piston.PistonRetract;
 import ru.mitriyf.rainbreaktorch.utils.piston.impl.RetractVersion7;
 import ru.mitriyf.rainbreaktorch.utils.piston.impl.RetractVersion8;
@@ -30,7 +45,10 @@ public class Utils {
     private final CommonUtils commonUtils;
     private final BukkitScheduler scheduler;
     private PistonRetract pistonRetract;
-    private boolean temperature;
+    private MinHeight minHeight;
+    private HandItem handItem;
+    private SetType setType;
+    private Rules rules;
 
     public Utils(RainBreakTorch plugin) {
         this.plugin = plugin;
@@ -44,14 +62,32 @@ public class Utils {
 
     public void setup() {
         int version = plugin.getVersion();
-        if (version < 17) {
-            temperature = true;
-            if (version < 8) {
-                pistonRetract = new RetractVersion7(plugin);
-                return;
-            }
+        boolean minVersion = version < 17;
+        if (minVersion) {
+            minHeight = new MinHeight16();
+        } else {
+            minHeight = new MinHeight17();
         }
-        pistonRetract = new RetractVersion8(plugin);
+        minVersion = minVersion && version < 13;
+        if (minVersion) {
+            rules = new Rules12(this);
+        } else {
+            rules = new Rules13(this);
+        }
+        minVersion = minVersion && version < 9;
+        if (minVersion) {
+            handItem = new HandItem8();
+        } else {
+            handItem = new HandItem9();
+        }
+        minVersion = minVersion && version < 8;
+        if (minVersion) {
+            pistonRetract = new RetractVersion7(plugin);
+            setType = new SetType7(this);
+        } else {
+            pistonRetract = new RetractVersion8(plugin);
+            setType = new SetType8();
+        }
     }
 
     public void sendMessage(CommandSender sender, List<Action> actions) {
@@ -105,10 +141,28 @@ public class Utils {
         logger.info(log);
     }
 
-    public void saveTorch(Block block, boolean remove) {
-        ChunkSnapshot snapshot = block.getChunk().getChunkSnapshot(true, true, false);
+    public void checkTorch(Block block, Material material, boolean remove) {
+        Chunk chunk = block.getChunk();
+        World world = block.getWorld();
+        if (checkRules(world, block.getBiome())) {
+            return;
+        }
         int x = block.getX() & 15;
+        int y = block.getY();
         int z = block.getZ() & 15;
-        scheduler.runTaskAsynchronously(plugin, () -> torchUtils.saveTorch(block.getWorld(), snapshot, x, block.getY(), z, block.getType(), remove));
+        if (material == null) {
+            material = block.getType();
+        }
+        Material finalMaterial = material;
+        boolean isStorm = world.hasStorm();
+        scheduler.runTaskAsynchronously(plugin, () -> torchUtils.checkTorch(world, chunk, null, x, y, z, finalMaterial, isStorm, remove));
+    }
+
+    public void checkTorch(Block block, boolean remove) {
+        checkTorch(block, null, remove);
+    }
+
+    public boolean checkRules(World world, Biome biome) {
+        return values.getWorldType().notContainsWorld(world) || values.getBiomeType().notContainsBiome(biome);
     }
 }

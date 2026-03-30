@@ -27,15 +27,54 @@ settings:
         - "no"
     # Torches break when it rains.
     torches:
-      # How many seconds does it take to delete an unnecessary object to prevent a leak? Leave the recommended value.
-      objectRemove: 30
       # Blocks that are torches. Specify the material.
       blocks:
         - "TORCH"
         - "WALL_TORCH"
         - "REDSTONE_TORCH"
+        - "REDSTONE_TORCH_ON"
+        - "REDSTONE_TORCH_OFF"
         - "REDSTONE_WALL_TORCH"
         - "CAMPFIRE"
+      # Blocks are defenders. They save the torch from breaking!
+      safeBlocks:
+        # Select the main type of defenders. IsSolid OR IsOccluding
+        # Recommended: IsOccluding
+        checkType: IsOccluding
+        # Insert otherlist/customlist/blacklist
+        # otherlist - Blocks from checkType and blocks that are listed here. (work in only list and checktype)
+        # customlist - Only the blocks from the list. (work in only list)
+        # blacklist - Blocks from checkType, but only those that should be prohibited are listed. (work in only list and checktype)
+        # multilist - Blocks from checkType, but the list section is responsible for adding new items, and you need to add a second blacklist section where blocks from checkType will be blocked. (list and blacklist)
+        type: otherlist
+        # List of blocks for the type.
+        list:
+          - "no"
+        blacklist:
+          - "List for multilist"
+      # If you're using some redstone blocks in torches, you'll need to add those here as well.
+      redstoneBlocks:
+        - "REDSTONE_TORCH"
+        - "REDSTONE_TORCH_ON"
+        - "REDSTONE_TORCH_OFF"
+      # Scan new generated chunks? This feature is required if you haven't generated the world. You can disable this feature if it causes lag.
+      checkNewChunk: true
+      # Change these settings only if you know what you're doing. These settings were chosen for a reason.
+      onlyDeveloper:
+        # How many torches break per tick? Do not change.
+        breakLimit: 250
+        # How many seconds does it take to delete an unnecessary object to prevent a leak? Leave the recommended value.
+        objectRemove: 30
+        # Performance limit for drops in ms.
+        msLimit: 2
+        # Blocking the drop if the plugin's maximum performance is exceeded. In ms.
+        msDelay: 2000
+        # Does the plugin need physics when removing torches?
+        physics:
+          # Turn on physics?
+          enabled: true
+          # Does the plugin need full physics? The default value is false, which means that a reduced version of physics is used to reduce server load.
+          full: false
 # Messages.
 messages:
   # Actions:
@@ -48,10 +87,14 @@ messages:
   noperm:
     - "[message] &cYou don't have enough rights."
   help:
+    - "[message] "
     - "[message] &aHelp:"
-    - "[message] &a/rainbreaktorch reload &f- Reload the plugin configuration."
-    - "[message] &a/rainbreaktorch status &f- Get the plugin status."
-    - "[message] &a/rainbreaktorch update cancel &f- &cCanceling&f a previous task."
-    - "[message] &a/rainbreaktorch update active world &f- Get all the torches from the active chunks in the world."
-    - "[message] &a/rainbreaktorch update all world &f- Get all the torches from the the world."
-    - "[message] &cWarning! &eDo this if you have 1. loaded all the chunks and you need behavior for all the torches in the world, OR 2. you have already installed the plugin on a server with loaded chunks and player torches."
+    - "[message]   &a/rainbreaktorch reload &f- Reload the plugin configuration."
+    - "[message]   &a/rainbreaktorch status &f- Get the plugin status."
+    - "[message]   &a/rainbreaktorch loot &f- Get help with the loots subcommand."
+    - "[message]   &a/rainbreaktorch update cancel &f- &cCanceling&f a previous task."
+    - "[message]   &a/rainbreaktorch update speed Number &f- &eSet the chunk loading speed in the worlds. &cAttention! It is not recommended to set it to more than 8."
+    - "[message]   &a/rainbreaktorch update active world &f- Get all the torches from the active chunks in the world."
+    - "[message]   &a/rainbreaktorch update all world &f- Get all the torches from the the world."
+    - "[message]     &cWarning! &eDo this if you have 1. loaded all the chunks and you need behavior for all the torches in the world, OR 2. you have already installed the plugin on a server with loaded chunks and player torches."
+    - "[message] ^^^"

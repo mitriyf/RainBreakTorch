@@ -10,8 +10,9 @@ import ru.mitriyf.rainbreaktorch.utils.common.data.column.Column;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
@@ -20,20 +21,21 @@ import java.util.logging.Logger;
 @Setter
 public class ChunkData {
     private final Map<Integer, Map<Integer, Column>> locations = new ConcurrentHashMap<>();
+    private final String fileName, worldName;
     private final RainBreakTorch plugin;
     private final TorchUtils torchUtils;
     private final int defaultLifeTime;
-    private final String fileName;
     private final Logger logger;
     private final File file;
     private int lifeTime;
     private boolean changed, active;
     private AtomicInteger queue = new AtomicInteger(0);
 
-    public ChunkData(TorchUtils torchUtils, File file, String fileName) {
+    public ChunkData(TorchUtils torchUtils, String worldName, File file, String fileName) {
         this.torchUtils = torchUtils;
         this.file = file;
         this.fileName = fileName;
+        this.worldName = worldName;
         plugin = torchUtils.getPlugin();
         logger = plugin.getLogger();
         defaultLifeTime = plugin.getValues().getObjectRemove();
@@ -58,7 +60,7 @@ public class ChunkData {
                     lifeTime--;
                 }
             }
-        }.runTaskTimer(plugin, 0, 20);
+        }.runTaskTimerAsynchronously(plugin, 0, 20);
     }
 
     public void save(boolean async) {
@@ -66,13 +68,17 @@ public class ChunkData {
             if (!changed) {
                 return;
             }
-            locations.values().forEach(zMap -> zMap.values().removeIf(Column::isEmpty));
-            locations.values().removeIf(Map::isEmpty);
-            if (locations.isEmpty()) {
-                try {
-                    Files.delete(Paths.get(file.getPath()));
-                } catch (Exception ignored) {
+            Iterator<Map<Integer, Column>> zMapIterator = locations.values().iterator();
+            while (zMapIterator.hasNext()) {
+                Map<Integer, Column> zMap = zMapIterator.next();
+                zMap.values().removeIf(Column::isEmpty);
+                if (zMap.isEmpty()) {
+                    zMapIterator.remove();
                 }
+            }
+            if (locations.isEmpty()) {
+                torchUtils.getWorldChunks().get(worldName).remove(fileName);
+                removeFile(file);
             } else {
                 Map<Integer, Map<Integer, Column>> snapshot = deepCopy(locations);
                 if (async) {
@@ -86,6 +92,7 @@ public class ChunkData {
     }
 
     private void write(Map<Integer, Map<Integer, Column>> snapshot) {
+        Set<String> worldChunks = torchUtils.getWorldChunks().get(worldName);
         try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(Files.newOutputStream(file.toPath())))) {
             out.writeInt(snapshot.size());
             for (Map.Entry<Integer, Map<Integer, Column>> xEntry : snapshot.entrySet()) {
@@ -105,18 +112,30 @@ public class ChunkData {
                     }
                 }
             }
+            out.flush();
+            worldChunks.add(fileName);
         } catch (Exception e) {
-            logger.warning("File " + file.getName() + " save error: " + e);
+            worldChunks.remove(fileName);
+            File world = torchUtils.getWorldFiles().get(worldName);
+            if (!world.exists() && world.mkdirs()) {
+                write(snapshot);
+            } else {
+                logger.warning("File " + file.getName() + " save error: " + e);
+            }
         }
     }
 
     private void read() {
+        if (file.length() == 0) {
+            removeFile(file);
+            return;
+        }
         try (DataInputStream in = new DataInputStream(new BufferedInputStream(Files.newInputStream(file.toPath())))) {
             int xSize = in.readInt();
             for (int i = 0; i < xSize; i++) {
                 int x = in.readInt();
                 int zSize = in.readInt();
-                Map<Integer, Column> zMap = new HashMap<>();
+                Map<Integer, Column> zMap = new ConcurrentHashMap<>();
                 for (int j = 0; j < zSize; j++) {
                     int z = in.readInt();
                     Column col = new Column();
@@ -132,20 +151,31 @@ public class ChunkData {
                 }
                 locations.put(x, zMap);
             }
+        } catch (EOFException e) {
+            logger.warning("File " + file.getName() + " is break. Reset file.");
+            locations.clear();
+            removeFile(file);
         } catch (Exception e) {
             logger.warning("File " + file.getName() + " load error: " + e);
         }
     }
 
     private Map<Integer, Map<Integer, Column>> deepCopy(Map<Integer, Map<Integer, Column>> orig) {
-        Map<Integer, Map<Integer, Column>> copy = new HashMap<>();
+        Map<Integer, Map<Integer, Column>> copy = new ConcurrentHashMap<>();
         for (Map.Entry<Integer, Map<Integer, Column>> xEntry : orig.entrySet()) {
-            Map<Integer, Column> zMap = new HashMap<>();
+            Map<Integer, Column> zMap = new ConcurrentHashMap<>();
             for (Map.Entry<Integer, Column> zEntry : xEntry.getValue().entrySet()) {
                 zMap.put(zEntry.getKey(), zEntry.getValue().cloneColumn());
             }
             copy.put(xEntry.getKey(), zMap);
         }
         return copy;
+    }
+
+    private void removeFile(File file) {
+        try {
+            Files.delete(Paths.get(file.getPath()));
+        } catch (Exception ignored) {
+        }
     }
 }

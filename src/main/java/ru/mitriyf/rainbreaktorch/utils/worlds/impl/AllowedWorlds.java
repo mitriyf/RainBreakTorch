@@ -15,7 +15,7 @@ public class AllowedWorlds implements WorldsList, BiomesList {
 
     @Override
     public boolean notContainsWorld(World world) {
-        return !values.getWorlds().contains(world.getName());
+        return !values.getWorlds().contains(world);
     }
 
     @Override
