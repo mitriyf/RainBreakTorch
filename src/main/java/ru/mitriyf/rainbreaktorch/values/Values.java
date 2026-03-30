@@ -192,6 +192,11 @@ public class Values {
     }
 
     private void setupSettingsMaterials(ConfigurationSection torches, ConfigurationSection safeBlocks) {
+        setupTorches(torches);
+        setupSafeBlocks(safeBlocks);
+    }
+
+    private void setupTorches(ConfigurationSection torches) {
         List<String> torchesList = torches.getStringList("blocks");
         for (String torch : torchesList) {
             try {
@@ -205,6 +210,23 @@ public class Values {
                 logger.warning("Error (EXCEPTION) in torches.blocks " + torch + ": " + e);
             }
         }
+        List<String> redstoneList = torches.getStringList("redstoneBlocks");
+        for (String redstone : redstoneList) {
+            if (redstone.isEmpty()) {
+                continue;
+            }
+            try {
+                Material material = Material.valueOf(redstone.toUpperCase());
+                redstoneBlocks.add(material);
+            } catch (Exception e) {
+                if (!redstone.startsWith("REDSTONE_TORCH")) {
+                    logger.warning("Error in torches.redstoneBlocks " + redstone + ": " + e);
+                }
+            }
+        }
+    }
+
+    private void setupSafeBlocks(ConfigurationSection safeBlocks) {
         List<String> listStringSafeBlocks = safeBlocks.getStringList("list");
         for (String materialName : listStringSafeBlocks) {
             if (materialName.isEmpty() || materialName.equals("no")) {
@@ -227,20 +249,6 @@ public class Values {
                 blackListSafeBlocks.add(material);
             } catch (Exception e) {
                 logger.warning("Error in torches.safeBlocks.blacklist " + materialName + ": " + e);
-            }
-        }
-        List<String> redstoneList = torches.getStringList("redstoneBlocks");
-        for (String redstone : redstoneList) {
-            if (redstone.isEmpty()) {
-                continue;
-            }
-            try {
-                Material material = Material.valueOf(redstone.toUpperCase());
-                redstoneBlocks.add(material);
-            } catch (Exception e) {
-                if (!redstone.startsWith("REDSTONE_TORCH")) {
-                    logger.warning("Error in torches.redstoneBlocks " + redstone + ": " + e);
-                }
             }
         }
     }

@@ -71,7 +71,7 @@ public final class RainBreakTorch extends JavaPlugin {
         String[] serverVersion = getServer().getBukkitVersion().split("-")[0].split("\\.");
         String subVersion = serverVersion[1];
         if (Integer.parseInt(serverVersion[0]) > 1) {
-            version = 21;
+            version = 26;
         } else if (subVersion.length() >= 2) {
             version = Integer.parseInt(subVersion.substring(0, 2));
         } else {

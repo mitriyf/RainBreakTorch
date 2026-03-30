@@ -85,6 +85,15 @@ public class LootSubCommands {
         if (itemSection == null) {
             itemSection = torchSection.createSection(itemName);
         }
+        if (isBadItem(player, itemStack, torchSection, itemName, itemSection, args) || isBadLocation(player, torchSection, itemName, itemSection, args)) {
+            return;
+        }
+        saveLoot(loot);
+        values.setup();
+        player.sendMessage("§aSuccessfully!");
+    }
+
+    private boolean isBadItem(Player player, ItemStack itemStack, ConfigurationSection torchSection, String itemName, ConfigurationSection itemSection, String[] args) {
         itemSection.set("item", itemStack);
         String args4 = args[4];
         String[] s = args4.split("-");
@@ -94,22 +103,26 @@ public class LootSubCommands {
             } catch (Exception e) {
                 player.sendMessage("§cEnter in amount a number or use the format 1-2\nError: " + e);
                 torchSection.set(itemName, null);
-                return;
+                return true;
             }
         } else if (s.length == 2) {
             itemSection.set("amount", args4);
         } else {
             player.sendMessage("§cEnter in amount a number or use the format 1-2");
             torchSection.set(itemName, null);
-            return;
+            return true;
         }
         try {
             itemSection.set("chance", utils.formatInt(args[5]));
         } catch (Exception e) {
             player.sendMessage("§cEnter in amount a number or use the format 1-2\nError: " + e);
             torchSection.set(itemName, null);
-            return;
+            return true;
         }
+        return false;
+    }
+
+    private boolean isBadLocation(Player player, ConfigurationSection torchSection, String itemName, ConfigurationSection itemSection, String[] args) {
         ConfigurationSection locationSection = itemSection.getConfigurationSection("location");
         if (locationSection == null) {
             locationSection = itemSection.createSection("location");
@@ -125,11 +138,9 @@ public class LootSubCommands {
         } catch (Exception e) {
             player.sendMessage("§cYou specified an incorrect Double!");
             torchSection.set(itemName, null);
-            return;
+            return true;
         }
-        saveLoot(loot);
-        values.setup();
-        player.sendMessage("§aSuccessfully!");
+        return false;
     }
 
     private void listLoot(CommandSender sender, String[] args) {

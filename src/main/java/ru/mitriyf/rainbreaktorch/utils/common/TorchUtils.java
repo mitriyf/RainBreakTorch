@@ -102,73 +102,85 @@ public class TorchUtils {
         }
         ChunkData chunkDataValue = getChunkData(worldName, chunkFile, fileName);
         synchronized (chunkDataValue) {
-            boolean changed, isFirst = true;
-            boolean checkRemoveBlock = !isTorch && remove;
-            Map<Integer, Map<Integer, Column>> locations = chunkDataValue.getLocations();
-            Map<Integer, Column> xSection = getXSection(locations, x, checkRemoveBlock);
-            if (xSection == null) {
-                exit(chunkDataValue, false);
-                return;
-            }
-            Column zSection = getZSection(xSection, z, checkRemoveBlock);
-            if (zSection == null) {
-                exit(chunkDataValue, false);
-                return;
-            }
-            Set<Integer> blocksSection = zSection.blocks;
-            Map<Integer, Boolean> torchesSection = zSection.torches;
-            if (remove) {
-                if (torchesSection.isEmpty()) {
-                    exit(chunkDataValue, false);
-                    return;
-                }
-                blocksSection.remove(y);
-                if (torchesSection.get(y) == null && !blocksSection.isEmpty()) {
-                    exit(chunkDataValue, false);
-                    return;
-                }
-                torchesSection.remove(y);
-                changed = true;
-                snapshot = snapshot != null ? snapshot : chunk.getChunkSnapshot(true, true, false);
-                checkHeight(world, snapshot, blocksSection, true, x, y, z);
-            } else {
-                changed = true;
-                isFirst = false;
-                if (isTorch) {
-                    if (torchesSection.get(y) == null) {
-                        torchesSection.put(y, false);
-                        if (isCheckHeight) {
-                            check(blocksSection, checkHeight);
-                        } else {
-                            snapshot = snapshot != null ? snapshot : chunk.getChunkSnapshot(true, true, false);
-                            checkHeight(world, snapshot, blocksSection, false, x, y, z);
-                        }
-                        isFirst = true;
-                        changed = false;
-                    }
-                } else if (values.getType().isValid(material)) {
-                    if (torchesSection.isEmpty()) {
-                        exit(chunkDataValue, false);
-                        return;
-                    }
-                    if (blocksSection.isEmpty()) {
-                        check(blocksSection, y);
-                    } else {
-                        int max = getYMax(blocksSection);
-                        if (max < y) {
-                            blocksSection.remove(max);
-                            check(blocksSection, y);
-                        } else {
-                            exit(chunkDataValue, false);
-                            return;
-                        }
-                    }
-                }
-            }
-            int realX = chunkX * 16 + x;
-            int realZ = chunkZ * 16 + z;
-            exit(chunkDataValue, processTorchesY(world, locations, xSection, torchesSection, blocksSection, x, z, realX, realZ, isStorm, changed, isFirst));
+            processChunkData(chunkDataValue, world, chunk, snapshot, chunkX, chunkZ, x, y, z, material, isStorm, remove, isTorch, isCheckHeight, checkHeight);
         }
+    }
+
+    private void processChunkData(ChunkData chunkDataValue, World world, Chunk chunk, ChunkSnapshot snapshot, int chunkX, int chunkZ, int x, int y, int z, Material material, boolean isStorm, boolean remove, boolean isTorch, boolean isCheckHeight, int checkHeight) {
+        boolean changed, isFirst = true;
+        boolean checkRemoveBlock = !isTorch && remove;
+        Map<Integer, Map<Integer, Column>> locations = chunkDataValue.getLocations();
+        Map<Integer, Column> xSection = getXSection(locations, x, checkRemoveBlock);
+        Column zSection = xSection != null ? getZSection(xSection, z, checkRemoveBlock) : null;
+        if (zSection == null) {
+            exit(chunkDataValue, false);
+            return;
+        }
+        Set<Integer> blocksSection = zSection.blocks;
+        Map<Integer, Boolean> torchesSection = zSection.torches;
+        if (remove) {
+            if (isBadRemove(chunkDataValue, blocksSection, torchesSection, y)) {
+                return;
+            }
+            torchesSection.remove(y);
+            changed = true;
+            snapshot = snapshot != null ? snapshot : chunk.getChunkSnapshot(true, true, false);
+            checkHeight(world, snapshot, blocksSection, true, x, y, z);
+        } else {
+            changed = true;
+            isFirst = false;
+            if (isTorch) {
+                if (torchesSection.get(y) == null) {
+                    torchesSection.put(y, false);
+                    if (isCheckHeight) {
+                        check(blocksSection, checkHeight);
+                    } else {
+                        snapshot = snapshot != null ? snapshot : chunk.getChunkSnapshot(true, true, false);
+                        checkHeight(world, snapshot, blocksSection, false, x, y, z);
+                    }
+                    isFirst = true;
+                    changed = false;
+                }
+            } else if (values.getType().isValid(material)) {
+                if (isBadSafeBlock(chunkDataValue, blocksSection, torchesSection, y)) {
+                    return;
+                }
+            }
+        }
+        exit(chunkDataValue, processTorchesY(world, locations, xSection, torchesSection, blocksSection, x, z, chunkX * 16 + x, chunkZ * 16 + z, isStorm, changed, isFirst));
+    }
+
+    private boolean isBadRemove(ChunkData chunkDataValue, Set<Integer> blocksSection, Map<Integer, Boolean> torchesSection, int y) {
+        if (torchesSection.isEmpty()) {
+            exit(chunkDataValue, false);
+            return true;
+        }
+        blocksSection.remove(y);
+        if (torchesSection.get(y) == null && !blocksSection.isEmpty()) {
+            exit(chunkDataValue, false);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isBadSafeBlock(ChunkData chunkDataValue, Set<Integer> blocksSection, Map<Integer, Boolean> torchesSection, int y) {
+        if (torchesSection.isEmpty()) {
+            exit(chunkDataValue, false);
+            return true;
+        }
+        if (blocksSection.isEmpty()) {
+            check(blocksSection, y);
+        } else {
+            int max = getYMax(blocksSection);
+            if (max < y) {
+                blocksSection.remove(max);
+                check(blocksSection, y);
+            } else {
+                exit(chunkDataValue, false);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void updateValues(World world, ChunkData chunkDataValue, int realChunkX, int realChunkZ, boolean isStorm) {
