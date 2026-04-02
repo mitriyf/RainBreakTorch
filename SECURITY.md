@@ -1,7 +1,7 @@
 ## 🛡️ Here are all the forums for which we are responsible and we personally created them
 ### Verified Forums:
 ### - SpigotMC.ru (Wait...)
-### - SpigotMC.org (Wait...)
+### - SpigotMC.org (https://www.spigotmc.org/resources/rainbreaktorch-extinguish-the-torches-that-are-in-the-rain-1-7-1-26-1.133972/)
 ### - RuBukkit.org (Wait...)
 ### - Modrinth.com (Wait...)
 
