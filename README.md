@@ -49,6 +49,8 @@ Get a list of commands using /rainbreaktorch help
 - /rainbreaktorch update active WorldName - Get all the torches from the active chunks in the world.
 - /rainbreaktorch update all WorldName - Get all the torches from the the world.
   Warning! Do this if you have 1. loaded all the chunks and you need behavior for all the torches in the world, OR 2. you have already installed the plugin on a server with loaded chunks and player torches.
+### Permission:
+- rainbreaktorch.use - Allow the use of the command.
 ### 🚀Launch:
 - Some security features that protect the server from lag due to this plugin. If you don't get drops from torches, you should increase the msLimit (onlyDeveloper section) in the plugin configuration.
 - Partial physics, another protective function.
