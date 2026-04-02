@@ -3,14 +3,15 @@ package ru.mitriyf.rainbreaktorch;
 import lombok.Getter;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.mitriyf.rainbreaktorch.cmd.RainBreakTorchCommand;
-import ru.mitriyf.rainbreaktorch.listeners.WorldListener;
-import ru.mitriyf.rainbreaktorch.listeners.versions.WorldListenerVersion8;
-import ru.mitriyf.rainbreaktorch.loot.LootManager;
+import ru.mitriyf.rainbreaktorch.command.RainBreakTorchCommand;
+import ru.mitriyf.rainbreaktorch.listener.WorldListener;
+import ru.mitriyf.rainbreaktorch.listener.compat.WorldListenerV8;
+import ru.mitriyf.rainbreaktorch.model.ChunkData;
+import ru.mitriyf.rainbreaktorch.model.DropData;
+import ru.mitriyf.rainbreaktorch.service.DropTaskService;
+import ru.mitriyf.rainbreaktorch.service.LootService;
+import ru.mitriyf.rainbreaktorch.service.TorchService;
 import ru.mitriyf.rainbreaktorch.utils.Utils;
-import ru.mitriyf.rainbreaktorch.utils.common.data.ChunkData;
-import ru.mitriyf.rainbreaktorch.utils.tasks.DropTask;
-import ru.mitriyf.rainbreaktorch.utils.tasks.data.DropData;
 import ru.mitriyf.rainbreaktorch.values.Values;
 
 import java.util.ArrayList;
@@ -21,8 +22,9 @@ import java.util.concurrent.ThreadLocalRandom;
 @SuppressWarnings("DataFlowIssue")
 public final class RainBreakTorch extends JavaPlugin {
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
-    private LootManager lootManager;
-    private DropTask dropTask;
+    private TorchService torchService;
+    private LootService lootService;
+    private DropTaskService dropTaskService;
     private Values values;
     private Utils utils;
     private int version;
@@ -34,37 +36,38 @@ public final class RainBreakTorch extends JavaPlugin {
         getServerVersion();
         values = new Values(this);
         utils = new Utils(this);
+        lootService = new LootService(this);
+        torchService = new TorchService(this);
         getCommand("rainbreaktorch").setExecutor(new RainBreakTorchCommand(this));
-        lootManager = new LootManager(this);
         values.setup();
         utils.setup();
         startDropTask();
         PluginManager manager = getServer().getPluginManager();
         manager.registerEvents(new WorldListener(this), this);
         if (version > 7) {
-            manager.registerEvents(new WorldListenerVersion8(this), this);
+            manager.registerEvents(new WorldListenerV8(this), this);
         }
     }
 
     @Override
     public void onDisable() {
         getServer().getScheduler().cancelTasks(this);
-        Map<String, ChunkData> dataMap = utils.getTorchUtils().getChunkData();
+        Map<String, ChunkData> dataMap = torchService.getChunkData();
         for (ChunkData data : new ArrayList<>(dataMap.values())) {
             data.save(false);
         }
         dataMap.clear();
-        if (dropTask != null) {
-            dropTask.cancel();
-            for (DropData data : dropTask.getDataList()) {
-                dropTask.drop(data, false);
+        if (dropTaskService != null) {
+            dropTaskService.cancel();
+            for (DropData data : dropTaskService.getDataList()) {
+                dropTaskService.drop(data, false);
             }
         }
     }
 
     private void startDropTask() {
-        dropTask = new DropTask(this);
-        dropTask.runTaskTimer(this, 1, 1);
+        dropTaskService = new DropTaskService(this);
+        dropTaskService.runTaskTimer(this, 1, 1);
     }
 
     private void getServerVersion() {

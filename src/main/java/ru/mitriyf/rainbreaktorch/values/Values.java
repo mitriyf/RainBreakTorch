@@ -8,27 +8,28 @@ import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import ru.mitriyf.rainbreaktorch.RainBreakTorch;
+import ru.mitriyf.rainbreaktorch.filter.block.TypeList;
+import ru.mitriyf.rainbreaktorch.filter.block.impl.BlackList;
+import ru.mitriyf.rainbreaktorch.filter.block.impl.CustomList;
+import ru.mitriyf.rainbreaktorch.filter.block.impl.MultiList;
+import ru.mitriyf.rainbreaktorch.filter.block.impl.OtherList;
+import ru.mitriyf.rainbreaktorch.filter.type.CheckType;
+import ru.mitriyf.rainbreaktorch.filter.type.impl.IsOccludingCheckType;
+import ru.mitriyf.rainbreaktorch.filter.type.impl.IsSolidCheckType;
+import ru.mitriyf.rainbreaktorch.filter.world.BiomesList;
+import ru.mitriyf.rainbreaktorch.filter.world.WorldsList;
+import ru.mitriyf.rainbreaktorch.filter.world.impl.AllowedWorlds;
+import ru.mitriyf.rainbreaktorch.filter.world.impl.BlockedWorlds;
 import ru.mitriyf.rainbreaktorch.utils.actions.Action;
 import ru.mitriyf.rainbreaktorch.utils.actions.ActionType;
-import ru.mitriyf.rainbreaktorch.utils.checks.blocks.TypeList;
-import ru.mitriyf.rainbreaktorch.utils.checks.blocks.impl.BlackList;
-import ru.mitriyf.rainbreaktorch.utils.checks.blocks.impl.CustomList;
-import ru.mitriyf.rainbreaktorch.utils.checks.blocks.impl.MultiList;
-import ru.mitriyf.rainbreaktorch.utils.checks.blocks.impl.OtherList;
-import ru.mitriyf.rainbreaktorch.utils.checks.type.CheckType;
-import ru.mitriyf.rainbreaktorch.utils.checks.type.impl.IsOccluding;
-import ru.mitriyf.rainbreaktorch.utils.checks.type.impl.IsSolid;
-import ru.mitriyf.rainbreaktorch.utils.colors.Colorizer;
-import ru.mitriyf.rainbreaktorch.utils.colors.impl.LegacyColorizer;
-import ru.mitriyf.rainbreaktorch.utils.colors.impl.MiniMessageColorizer;
-import ru.mitriyf.rainbreaktorch.utils.worlds.BiomesList;
-import ru.mitriyf.rainbreaktorch.utils.worlds.WorldsList;
-import ru.mitriyf.rainbreaktorch.utils.worlds.impl.AllowedWorlds;
-import ru.mitriyf.rainbreaktorch.utils.worlds.impl.BlockedWorlds;
+import ru.mitriyf.rainbreaktorch.utils.color.Colorizer;
+import ru.mitriyf.rainbreaktorch.utils.color.impl.LegacyColorizer;
+import ru.mitriyf.rainbreaktorch.utils.color.impl.MiniMessageColorizer;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,12 +40,12 @@ public class Values {
     private final Logger logger;
     private final RainBreakTorch plugin;
     private final File worldsFile, configFile, lootFile;
-    private final List<Biome> biomes = new ArrayList<>();
-    private final List<World> worlds = new ArrayList<>();
-    private final List<Material> torchesBlocks = new ArrayList<>();
-    private final List<Material> redstoneBlocks = new ArrayList<>();
-    private final List<Material> listSafeBlocks = new ArrayList<>();
-    private final List<Material> blackListSafeBlocks = new ArrayList<>();
+    private final Set<Biome> biomes = new HashSet<>();
+    private final Set<World> worlds = new HashSet<>();
+    private final Set<Material> torchesBlocks = new HashSet<>();
+    private final Set<Material> redstoneBlocks = new HashSet<>();
+    private final Set<Material> listSafeBlocks = new HashSet<>();
+    private final Set<Material> blackListSafeBlocks = new HashSet<>();
     private final Pattern actionPattern = Pattern.compile("\\[(\\w+)] ?(.*)");
     private boolean miniMessage, checkNewChunk, physicsEnabled, physicsFull;
     private int objectRemove, breakLimit, msLimit, msDelay;
@@ -91,7 +92,7 @@ public class Values {
             return;
         }
         setupMessages(messages);
-        plugin.getLootManager().setup();
+        plugin.getLootService().setup();
     }
 
     private void getConfigurations() {
@@ -120,9 +121,9 @@ public class Values {
         ConfigurationSection safeBlocks = torches.getConfigurationSection("safeBlocks");
         String checkTypeString = safeBlocks.getString("checkType");
         if (checkTypeString.equalsIgnoreCase("IsSolid")) {
-            checkType = new IsSolid();
+            checkType = new IsSolidCheckType();
         } else {
-            checkType = new IsOccluding();
+            checkType = new IsOccludingCheckType();
         }
         setupSettingsType(safeBlocks);
         setupSettingsMaterials(torches, safeBlocks);

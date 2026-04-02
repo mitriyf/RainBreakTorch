@@ -1,33 +1,23 @@
 package ru.mitriyf.rainbreaktorch.utils;
 
 import lombok.Getter;
-import org.bukkit.Chunk;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.block.Biome;
-import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitScheduler;
 import ru.mitriyf.rainbreaktorch.RainBreakTorch;
+import ru.mitriyf.rainbreaktorch.compat.abstraction.*;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_12.BlockSetterV12;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_12.VersionRulesV12;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_13.BlockSetterV13;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_13.VersionRulesV13;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_16.HeightProviderV16;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_17.HeightProviderV17;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_7.PistonHandlerV7;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_8.HandInquisitorV8;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_8.PistonHandlerV8;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_9.HandInquisitorV9;
 import ru.mitriyf.rainbreaktorch.utils.actions.Action;
 import ru.mitriyf.rainbreaktorch.utils.actions.ActionType;
-import ru.mitriyf.rainbreaktorch.utils.block.SetType;
-import ru.mitriyf.rainbreaktorch.utils.block.impl.SetType7;
-import ru.mitriyf.rainbreaktorch.utils.block.impl.SetType8;
 import ru.mitriyf.rainbreaktorch.utils.common.CommonUtils;
-import ru.mitriyf.rainbreaktorch.utils.common.TorchUtils;
-import ru.mitriyf.rainbreaktorch.utils.common.height.MinHeight;
-import ru.mitriyf.rainbreaktorch.utils.common.height.impl.MinHeight16;
-import ru.mitriyf.rainbreaktorch.utils.common.height.impl.MinHeight17;
-import ru.mitriyf.rainbreaktorch.utils.common.rules.Rules;
-import ru.mitriyf.rainbreaktorch.utils.common.rules.impl.Rules12;
-import ru.mitriyf.rainbreaktorch.utils.common.rules.impl.Rules13;
-import ru.mitriyf.rainbreaktorch.utils.hand.HandItem;
-import ru.mitriyf.rainbreaktorch.utils.hand.impl.HandItem8;
-import ru.mitriyf.rainbreaktorch.utils.hand.impl.HandItem9;
-import ru.mitriyf.rainbreaktorch.utils.piston.PistonRetract;
-import ru.mitriyf.rainbreaktorch.utils.piston.impl.RetractVersion7;
-import ru.mitriyf.rainbreaktorch.utils.piston.impl.RetractVersion8;
 import ru.mitriyf.rainbreaktorch.values.Values;
 
 import java.util.List;
@@ -41,14 +31,13 @@ public class Utils {
     private final Logger logger;
     private final RainBreakTorch plugin;
     private final CountDownLatch latch;
-    private final TorchUtils torchUtils;
     private final CommonUtils commonUtils;
     private final BukkitScheduler scheduler;
-    private PistonRetract pistonRetract;
-    private MinHeight minHeight;
-    private HandItem handItem;
-    private SetType setType;
-    private Rules rules;
+    private HeightProvider heightProvider;
+    private HandInquisitor handInquisitor;
+    private PistonHandler pistonHandler;
+    private VersionRules versionRules;
+    private BlockSetter blockSetter;
 
     public Utils(RainBreakTorch plugin) {
         this.plugin = plugin;
@@ -56,7 +45,6 @@ public class Utils {
         logger = plugin.getLogger();
         latch = new CountDownLatch(1);
         scheduler = plugin.getServer().getScheduler();
-        torchUtils = new TorchUtils(this, plugin);
         commonUtils = new CommonUtils(this, plugin);
     }
 
@@ -64,29 +52,29 @@ public class Utils {
         int version = plugin.getVersion();
         boolean minVersion = version < 17;
         if (minVersion) {
-            minHeight = new MinHeight16();
+            heightProvider = new HeightProviderV16();
         } else {
-            minHeight = new MinHeight17();
+            heightProvider = new HeightProviderV17();
         }
         minVersion = minVersion && version < 13;
         if (minVersion) {
-            rules = new Rules12(this);
+            blockSetter = new BlockSetterV12(logger);
+            versionRules = new VersionRulesV12(values);
         } else {
-            rules = new Rules13(this);
+            versionRules = new VersionRulesV13(values);
+            blockSetter = new BlockSetterV13();
         }
         minVersion = minVersion && version < 9;
         if (minVersion) {
-            handItem = new HandItem8();
+            handInquisitor = new HandInquisitorV8();
         } else {
-            handItem = new HandItem9();
+            handInquisitor = new HandInquisitorV9();
         }
         minVersion = minVersion && version < 8;
         if (minVersion) {
-            pistonRetract = new RetractVersion7(plugin);
-            setType = new SetType7(this);
+            pistonHandler = new PistonHandlerV7(plugin);
         } else {
-            pistonRetract = new RetractVersion8(plugin);
-            setType = new SetType8();
+            pistonHandler = new PistonHandlerV8(plugin);
         }
     }
 
@@ -102,16 +90,19 @@ public class Utils {
         ActionType type = action.getType();
         String context = action.getContext();
         switch (type) {
-            case CONSOLE:
+            case CONSOLE: {
                 commonUtils.dispatchConsole(context);
                 break;
-            case BROADCAST:
+            }
+            case BROADCAST: {
                 commonUtils.broadcast(context);
                 break;
-            case LOG:
+            }
+            case LOG: {
                 log(context);
                 break;
-            case DELAY:
+            }
+            case DELAY: {
                 try {
                     if (latch.await(formatInt(context) * 50L, TimeUnit.MILLISECONDS)) {
                         break;
@@ -119,9 +110,11 @@ public class Utils {
                 } catch (Exception ignored) {
                 }
                 break;
-            default:
+            }
+            default: {
                 sendMessage(sender, context);
                 break;
+            }
         }
     }
 
@@ -139,30 +132,5 @@ public class Utils {
 
     private void log(String log) {
         logger.info(log);
-    }
-
-    public void checkTorch(Block block, Material material, boolean remove) {
-        Chunk chunk = block.getChunk();
-        World world = block.getWorld();
-        if (checkRules(world, block.getBiome())) {
-            return;
-        }
-        int x = block.getX() & 15;
-        int y = block.getY();
-        int z = block.getZ() & 15;
-        if (material == null) {
-            material = block.getType();
-        }
-        Material finalMaterial = material;
-        boolean isStorm = world.hasStorm();
-        scheduler.runTaskAsynchronously(plugin, () -> torchUtils.checkTorch(world, chunk, null, x, y, z, finalMaterial, isStorm, remove));
-    }
-
-    public void checkTorch(Block block, boolean remove) {
-        checkTorch(block, null, remove);
-    }
-
-    public boolean checkRules(World world, Biome biome) {
-        return values.getWorldType().notContainsWorld(world) || values.getBiomeType().notContainsBiome(biome);
     }
 }

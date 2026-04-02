@@ -6,7 +6,7 @@
 # There is also a default section that indicates the loot for all torches.
 #
 # You can also add items using the command:
-# /rainbreaktorch loot - Get help with the loots subcommand.
+# /rainbreaktorch loot - Get help with the loot subcommand.
 default:
   stick:
     item: STICK
