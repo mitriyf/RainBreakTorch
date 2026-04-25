@@ -1,5 +1,5 @@
 name: RainBreakTorch
-version: '1.0'
+version: '1.1'
 main: ru.mitriyf.rainbreaktorch.RainBreakTorch
 api-version: 1.13
 commands:

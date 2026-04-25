@@ -22,18 +22,18 @@ import java.util.concurrent.ThreadLocalRandom;
 @SuppressWarnings("DataFlowIssue")
 public final class RainBreakTorch extends JavaPlugin {
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
+    private DropTaskService dropTaskService;
     private TorchService torchService;
     private LootService lootService;
-    private DropTaskService dropTaskService;
+    private int version = 13;
     private Values values;
     private Utils utils;
-    private int version;
 
     @Override
     public void onEnable() {
         getLogger().info("Support: https://vk.com/jdevs");
         saveDefaultConfig();
-        getServerVersion();
+        tryGetServerVersion();
         values = new Values(this);
         utils = new Utils(this);
         lootService = new LootService(this);
@@ -70,15 +70,20 @@ public final class RainBreakTorch extends JavaPlugin {
         dropTaskService.runTaskTimer(this, 1, 1);
     }
 
-    private void getServerVersion() {
-        String[] serverVersion = getServer().getBukkitVersion().split("-")[0].split("\\.");
-        String subVersion = serverVersion[1];
-        if (Integer.parseInt(serverVersion[0]) > 1) {
+    private void tryGetServerVersion() {
+        try {
+            String[] serverVersion = getServer().getBukkitVersion().split("-")[0].split("\\.");
+            String subVersion = serverVersion[1];
+            if (Integer.parseInt(serverVersion[0]) > 1) {
+                version = 26;
+            } else if (subVersion.length() >= 2) {
+                version = Integer.parseInt(subVersion.substring(0, 2));
+            } else {
+                version = Integer.parseInt(subVersion);
+            }
+        } catch (Exception e) {
+            getLogger().info("Version check failed. Default set version 26. Error: " + e);
             version = 26;
-        } else if (subVersion.length() >= 2) {
-            version = Integer.parseInt(subVersion.substring(0, 2));
-        } else {
-            version = Integer.parseInt(subVersion);
         }
     }
 }

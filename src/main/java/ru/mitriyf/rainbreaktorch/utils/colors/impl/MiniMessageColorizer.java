@@ -1,9 +1,9 @@
-package ru.mitriyf.rainbreaktorch.utils.color.impl;
+package ru.mitriyf.rainbreaktorch.utils.colors.impl;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import ru.mitriyf.rainbreaktorch.utils.color.Colorizer;
+import ru.mitriyf.rainbreaktorch.utils.colors.Colorizer;
 
 public class MiniMessageColorizer implements Colorizer {
     @Override

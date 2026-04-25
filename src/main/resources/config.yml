@@ -1,6 +1,6 @@
 ###########################################################
 #                      RainBreakTorch                     #
-#                           1.0                           #
+#                           1.1                           #
 ###########################################################
 
 # Settings.
@@ -17,25 +17,44 @@ settings:
       type: blocked
       # List of worlds for the type.
       list:
-        - "no"
+        - "world_nether"
+        - "world_the_end"
     # Biomes settings.
     biomes:
       # Insert allowed/blocked
       type: blocked
       # List of biomes for the type.
       list:
-        - "no"
+        - "desert"
+        - "desert_hIlls"
+        - "desert_mountAins"
+        - "savanna"
+        - "savanna_mountAins"
+        - "savanna_plateau"
+        - "savanna_plateau_mountAins"
+        - "windswept_savAnna"
+        - "badlAnds"
+        - "wooded_badlAnds"
+        - "eroded_badlAnds"
+        - "badlAnds_plateau"
+        - "modifiEd_badlands_plateau"
+        - "wOoded_badlands_plateau"
+        - "modifiEd_wOoded_badlands_plateau"
     # Torches break when it rains.
     torches:
       # Blocks that are torches. Specify the material.
       blocks:
-        - "TORCH"
-        - "WALL_TORCH"
-        - "REDSTONE_TORCH"
-        - "REDSTONE_TORCH_ON"
-        - "REDSTONE_TORCH_OFF"
-        - "REDSTONE_WALL_TORCH"
-        - "CAMPFIRE"
+        - "torCh"
+        - "wall_torCh"
+        - "soul_torCh"
+        - "soul_wall_torCh"
+        - "copper_torCh"
+        - "copper_wall_torCh"
+        - "redstone_torCh"
+        - "redstone_torCh_oN"
+        - "redstone_torCh_oFF"
+        - "redstone_wall_torCh"
+        - "campfIre"
       # Blocks are defenders. They save the torch from breaking!
       safeBlocks:
         # Select the main type of defenders. IsSolid OR IsOccluding
@@ -49,15 +68,132 @@ settings:
         type: otherlist
         # List of blocks for the type.
         list:
-          - "no"
+          - "oak_slAb"
+          - "spruce_slAb"
+          - "birch_slAb"
+          - "jungle_slAb"
+          - "acacia_slAb"
+          - "dark_oak_slAb"
+          - "mangrove_slAb"
+          - "cherry_slAb"
+          - "pale_oak_slAb"
+          - "bamboo_slAb"
+          - "bamboo_mosaic_slAb"
+          - "crimson_slAb"
+          - "warped_slAb"
+          - "stone_slAb"
+          - "cobblestone_slAb"
+          - "mossy_cobblestone_slAb"
+          - "smooth_stone_slAb"
+          - "stone_brick_slAb"
+          - "mossy_stone_brick_slAb"
+          - "granite_slAb"
+          - "polished_granite_slAb"
+          - "diorite_slAb"
+          - "polished_diorite_slAb"
+          - "andesite_slAb"
+          - "polished_andesite_slAb"
+          - "cobbled_deepslate_slAb"
+          - "polished_deepslate_slAb"
+          - "deepslate_brick_slAb"
+          - "deepslate_tile_slAb"
+          - "tuff_slAb"
+          - "polished_tuff_slAb"
+          - "tuff_brick_slAb"
+          - "brick_slAb"
+          - "mud_brick_slAb"
+          - "resin_brick_slAb"
+          - "sandstone_slAb"
+          - "smooth_sandstone_slAb"
+          - "cut_sandstone_slAb"
+          - "red_sandstone_slAb"
+          - "smooth_red_sandstone_slAb"
+          - "prismarine_slAb"
+          - "prismarine_brick_slAb"
+          - "dark_prismarine_slAb"
+          - "nether_brick_slAb"
+          - "red_nether_brick_slAb"
+          - "blackstone_slAb"
+          - "polished_blackstone_slAb"
+          - "polished_blackstone_brick_slAb"
+          - "end_stone_brick_slAb"
+          - "purpur_slAb"
+          - "quartz_slAb"
+          - "smooth_quartz_slAb"
+          - "cut_copper_slAb"
+          - "exposed_cut_copper_slAb"
+          - "weathered_cut_copper_slAb"
+          - "oxidized_cut_copper_slAb"
+          - "waxed_cut_copper_slAb"
+          - "waxed_exposed_cut_copper_slAb"
+          - "waxed_weathered_cut_copper_slAb"
+          - "waxed_oxidized_cut_copper_slAb"
+          - "oak_stAirs"
+          - "spruce_stAirs"
+          - "birch_stAirs"
+          - "jungle_stAirs"
+          - "acacia_stAirs"
+          - "dark_oak_stAirs"
+          - "mangrove_stAirs"
+          - "cherry_stAirs"
+          - "pale_oak_stAirs"
+          - "bamboo_stAirs"
+          - "bamboo_mosaic_stAirs"
+          - "crimson_stAirs"
+          - "warped_stAirs"
+          - "stone_stAirs"
+          - "cobblestone_stAirs"
+          - "mossy_cobblestone_stAirs"
+          - "stone_brick_stAirs"
+          - "mossy_stone_brick_stAirs"
+          - "granite_stAirs"
+          - "polished_granite_stAirs"
+          - "diorite_stAirs"
+          - "polished_diorite_stAirs"
+          - "andesite_stAirs"
+          - "polished_andesite_stAirs"
+          - "cobbled_deepslate_stAirs"
+          - "polished_deepslate_stAirs"
+          - "deepslate_brick_stAirs"
+          - "deepslate_tile_stAirs"
+          - "tuff_stAirs"
+          - "polished_tuff_stAirs"
+          - "tuff_brick_stAirs"
+          - "brick_stAirs"
+          - "mud_brick_stAirs"
+          - "resin_brick_stAirs"
+          - "sandstone_stAirs"
+          - "smooth_sandstone_stAirs"
+          - "red_sandstone_stAirs"
+          - "smooth_red_sandstone_stAirs"
+          - "prismarine_stAirs"
+          - "prismarine_brick_stAirs"
+          - "dark_prismarine_stAirs"
+          - "nether_brick_stAirs"
+          - "red_nether_brick_stAirs"
+          - "blackstone_stAirs"
+          - "polished_blackstone_stAirs"
+          - "polished_blackstone_brick_stAirs"
+          - "end_stone_brick_stAirs"
+          - "purpur_stAirs"
+          - "quartz_stAirs"
+          - "smooth_quartz_stAirs"
+          - "cut_copper_stAirs"
+          - "exposed_cut_copper_stAirs"
+          - "weathered_cut_copper_stAirs"
+          - "oxidized_cut_copper_stAirs"
+          - "waxed_cut_copper_stAirs"
+          - "waxed_exposed_cut_copper_stAirs"
+          - "waxed_weathered_cut_copper_stAirs"
+          - "waxed_oxidized_cut_copper_stAirs"
         blacklist:
           - "List for multilist"
       # If you're using some redstone blocks in torches, you'll need to add those here as well.
       redstoneBlocks:
-        - "REDSTONE_TORCH"
-        - "REDSTONE_TORCH_ON"
-        - "REDSTONE_TORCH_OFF"
-        - "REDSTONE_WALL_TORCH"
+        - "redstone_torCh"
+        - "redstone_torCh_oN"
+        - "redstone_torCh_oFF"
+        - "redstone_wall_torCh"
       # Scan new generated chunks? This feature is required if you haven't generated the world. You can disable this feature if it causes lag.
       checkNewChunk: true
       # Change these settings only if you know what you're doing. These settings were chosen for a reason.
@@ -67,7 +203,7 @@ settings:
         # How many seconds does it take to delete an unnecessary object to prevent a leak? Leave the recommended value.
         objectRemove: 30
         # Performance limit for drops in ms.
-        msLimit: 5
+        msLimit: 6
         # Blocking the drop if the plugin's maximum performance is exceeded. In ms.
         msDelay: 10000
         # Does the plugin need physics when removing torches?

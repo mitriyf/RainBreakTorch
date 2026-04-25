@@ -1,6 +1,6 @@
-package ru.mitriyf.rainbreaktorch.utils.color.impl;
+package ru.mitriyf.rainbreaktorch.utils.colors.impl;
 
-import ru.mitriyf.rainbreaktorch.utils.color.Colorizer;
+import ru.mitriyf.rainbreaktorch.utils.colors.Colorizer;
 
 public class LegacyColorizer implements Colorizer {
     @Override

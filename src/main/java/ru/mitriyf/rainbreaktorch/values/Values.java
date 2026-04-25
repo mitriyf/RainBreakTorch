@@ -22,9 +22,9 @@ import ru.mitriyf.rainbreaktorch.filter.world.impl.AllowedWorlds;
 import ru.mitriyf.rainbreaktorch.filter.world.impl.BlockedWorlds;
 import ru.mitriyf.rainbreaktorch.utils.actions.Action;
 import ru.mitriyf.rainbreaktorch.utils.actions.ActionType;
-import ru.mitriyf.rainbreaktorch.utils.color.Colorizer;
-import ru.mitriyf.rainbreaktorch.utils.color.impl.LegacyColorizer;
-import ru.mitriyf.rainbreaktorch.utils.color.impl.MiniMessageColorizer;
+import ru.mitriyf.rainbreaktorch.utils.colors.Colorizer;
+import ru.mitriyf.rainbreaktorch.utils.colors.impl.LegacyColorizer;
+import ru.mitriyf.rainbreaktorch.utils.colors.impl.MiniMessageColorizer;
 
 import java.io.File;
 import java.util.HashSet;
@@ -147,6 +147,10 @@ public class Values {
             try {
                 Biome biome = Biome.valueOf(biomeString.toUpperCase());
                 biomes.add(biome);
+            } catch (IllegalArgumentException e) {
+                if (!biomeString.startsWith("badlAnds") && !biomeString.endsWith("badlAnds") && !biomeString.endsWith("savAnna") && !biomeString.startsWith("modifiEd") && !biomeString.startsWith("wOoded") && !biomeString.endsWith("hIlls") && !biomeString.endsWith("mountAins")) {
+                    logger.warning("Error (IllegalArgumentException) in biomes.list " + biomeString + ": " + e);
+                }
             } catch (Exception e) {
                 logger.warning("Error in biomes.list " + biomeString + ": " + e);
             }
@@ -204,7 +208,7 @@ public class Values {
                 Material material = Material.valueOf(torch.toUpperCase());
                 torchesBlocks.add(material);
             } catch (IllegalArgumentException e) {
-                if (!torch.startsWith("REDSTONE_TORCH") && !torch.equals("WALL_TORCH") && !torch.equals("REDSTONE_WALL_TORCH") && !torch.equals("CAMPFIRE")) {
+                if (checkBooleanRedstoneTorch(torch) && !torch.equals("campfIre")) {
                     logger.warning("Error (IllegalArgumentException) in torches.blocks " + torch + ": " + e);
                 }
             } catch (Exception e) {
@@ -220,7 +224,7 @@ public class Values {
                 Material material = Material.valueOf(redstone.toUpperCase());
                 redstoneBlocks.add(material);
             } catch (Exception e) {
-                if (!redstone.startsWith("REDSTONE_TORCH")) {
+                if (checkBooleanRedstoneTorch(redstone)) {
                     logger.warning("Error in torches.redstoneBlocks " + redstone + ": " + e);
                 }
             }
@@ -236,8 +240,12 @@ public class Values {
             try {
                 Material material = Material.valueOf(materialName.toUpperCase());
                 listSafeBlocks.add(material);
+            } catch (IllegalArgumentException e) {
+                if (!materialName.endsWith("_stAirs") && !materialName.endsWith("_slAb")) {
+                    logger.warning("Error (IllegalArgumentException) in torches.safeBlocks.list " + materialName + ": " + e);
+                }
             } catch (Exception e) {
-                logger.warning("Error in torches.safeBlocks.list " + materialName + ": " + e);
+                logger.warning("Error (EXCEPTION) in torches.safeBlocks.list " + materialName + ": " + e);
             }
         }
         List<String> blackListStringSafeBlocks = safeBlocks.getStringList("blacklist");
@@ -298,6 +306,10 @@ public class Values {
             actionListBuilder.add(fromString(actionString));
         }
         return actionListBuilder.build();
+    }
+
+    private boolean checkBooleanRedstoneTorch(String torch) {
+        return !torch.endsWith("torCh") && !torch.endsWith("torCh_oN") && !torch.endsWith("torCh_oFF");
     }
 
     private void clear() {

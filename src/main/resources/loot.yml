@@ -12,7 +12,7 @@ default:
     item: STICK
     location:
       addX: 0.5
-      addY: 0
+      addY: 0.5
       addZ: 0.5
     amount: 1-1
     chance: 100
@@ -22,7 +22,7 @@ loot:
       item: REDSTONE
       location:
         addX: 0.5
-        addY: 0
+        addY: 0.5
         addZ: 0.5
       amount: 1-1
       chance: 1

@@ -14,6 +14,7 @@ import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkPopulateEvent;
 import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 import ru.mitriyf.rainbreaktorch.RainBreakTorch;
 import ru.mitriyf.rainbreaktorch.compat.abstraction.VersionRules;
 import ru.mitriyf.rainbreaktorch.service.TorchService;
@@ -65,6 +66,12 @@ public class WorldListener implements Listener {
             }
             torchService.getWorldChunks().putIfAbsent(worldName, chunks);
         }
+        updateValues();
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onWorldUnload(WorldUnloadEvent e) {
+        updateValues();
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -142,5 +149,9 @@ public class WorldListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent e) {
         torchService.checkTorch(e.getBlock(), true);
+    }
+
+    private void updateValues() {
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> plugin.getValues().setup(), 5L);
     }
 }
