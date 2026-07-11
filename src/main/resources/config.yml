@@ -1,6 +1,6 @@
 ###########################################################
 #                      RainBreakTorch                     #
-#                           1.1                           #
+#                           1.2                           #
 ###########################################################
 
 # Settings.
@@ -28,10 +28,10 @@ settings:
         - "desert"
         - "desert_hIlls"
         - "desert_mountAins"
-        - "savanna"
-        - "savanna_mountAins"
-        - "savanna_plateau"
-        - "savanna_plateau_mountAins"
+        - "sAvanna"
+        - "sAvanna_mountAins"
+        - "sAvanna_plateau"
+        - "sAvanna_plateau_mountAins"
         - "windswept_savAnna"
         - "badlAnds"
         - "wooded_badlAnds"
@@ -40,6 +40,9 @@ settings:
         - "modifiEd_badlands_plateau"
         - "wOoded_badlands_plateau"
         - "modifiEd_wOoded_badlands_plateau"
+        - "meSa"
+        - "meSa_rock"
+        - "meSa_clear_rock"
     # Torches break when it rains.
     torches:
       # Blocks that are torches. Specify the material.

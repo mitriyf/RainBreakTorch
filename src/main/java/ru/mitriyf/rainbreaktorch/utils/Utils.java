@@ -9,6 +9,8 @@ import ru.mitriyf.rainbreaktorch.compat.impl.v1_12.BlockSetterV12;
 import ru.mitriyf.rainbreaktorch.compat.impl.v1_12.VersionRulesV12;
 import ru.mitriyf.rainbreaktorch.compat.impl.v1_13.BlockSetterV13;
 import ru.mitriyf.rainbreaktorch.compat.impl.v1_13.VersionRulesV13;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_14.GetBiomeV14;
+import ru.mitriyf.rainbreaktorch.compat.impl.v1_15.GetBiomeV15;
 import ru.mitriyf.rainbreaktorch.compat.impl.v1_16.HeightProviderV16;
 import ru.mitriyf.rainbreaktorch.compat.impl.v1_17.HeightProviderV17;
 import ru.mitriyf.rainbreaktorch.compat.impl.v1_7.PistonHandlerV7;
@@ -38,6 +40,7 @@ public class Utils {
     private PistonHandler pistonHandler;
     private VersionRules versionRules;
     private BlockSetter blockSetter;
+    private GetBiome getBiome;
 
     public Utils(RainBreakTorch plugin) {
         this.plugin = plugin;
@@ -55,6 +58,12 @@ public class Utils {
             heightProvider = new HeightProviderV16();
         } else {
             heightProvider = new HeightProviderV17();
+        }
+        minVersion = minVersion && version < 15;
+        if (minVersion) {
+            getBiome = new GetBiomeV14();
+        } else {
+            getBiome = new GetBiomeV15();
         }
         minVersion = minVersion && version < 13;
         if (minVersion) {

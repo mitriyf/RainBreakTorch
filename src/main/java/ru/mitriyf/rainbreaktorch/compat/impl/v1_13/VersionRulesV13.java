@@ -2,7 +2,6 @@ package ru.mitriyf.rainbreaktorch.compat.impl.v1_13;
 
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
-import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.*;
 import ru.mitriyf.rainbreaktorch.compat.abstraction.VersionRules;
@@ -35,11 +34,6 @@ public class VersionRulesV13 implements VersionRules {
     @Override
     public Material getBlockType(ChunkSnapshot snapshot, int x, int y, int z) {
         return snapshot.getBlockType(x, y, z);
-    }
-
-    @Override
-    public Biome getBiome(ChunkSnapshot snapshot, int x, int y, int z) {
-        return snapshot.getBiome(x, y, z);
     }
 
     @Override

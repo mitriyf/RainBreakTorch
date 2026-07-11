@@ -148,7 +148,7 @@ public class Values {
                 Biome biome = Biome.valueOf(biomeString.toUpperCase());
                 biomes.add(biome);
             } catch (IllegalArgumentException e) {
-                if (!biomeString.startsWith("badlAnds") && !biomeString.endsWith("badlAnds") && !biomeString.endsWith("savAnna") && !biomeString.startsWith("modifiEd") && !biomeString.startsWith("wOoded") && !biomeString.endsWith("hIlls") && !biomeString.endsWith("mountAins")) {
+                if (!biomeString.startsWith("meSa") && !biomeString.startsWith("sAvanna") && !biomeString.startsWith("badlAnds") && !biomeString.endsWith("badlAnds") && !biomeString.endsWith("savAnna") && !biomeString.startsWith("modifiEd") && !biomeString.startsWith("wOoded") && !biomeString.endsWith("hIlls") && !biomeString.endsWith("mountAins")) {
                     logger.warning("Error (IllegalArgumentException) in biomes.list " + biomeString + ": " + e);
                 }
             } catch (Exception e) {

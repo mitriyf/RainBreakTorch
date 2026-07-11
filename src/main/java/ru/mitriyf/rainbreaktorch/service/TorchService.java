@@ -266,7 +266,7 @@ public class TorchService {
                     Material material = utils.getVersionRules().getBlockType(snapshot, x, y, z);
                     if (material != Material.AIR && values.getTorchesBlocks().contains(material)) {
                         found += 1;
-                        if (checkRules(world, utils.getVersionRules().getBiome(snapshot, x, y, z))) {
+                        if (checkRules(world, utils.getGetBiome().get(snapshot, x, y, z))) {
                             continue;
                         }
                         checkTorch(world, null, snapshot, x, y, z, material, isStorm, false);
