@@ -2,7 +2,7 @@
 ## 🔥 Extinguish the torches that are in the rain 
 This plugin adds the mechanic of breaking torches in the rain for your players. 
 - $ Versions 1.7.1-26.1+ are supported.
-- $ Has been tested on versions: 1.7.10, 1.8.8, 1.12.2, 1.16.5, 1.19.4, 1.21, 26.1
+- $ Has been tested on versions: 1.7.10, 1.8.8, 1.9.4, 1.12.2, 1.13.2, 1.14.4, 1.15.2, 1.16.5, 1.19.4, 1.21, 26.1
 - $ Attention! The plugin works partially fine with WorldEdit. Don't replace blocks with air if there are torches at that height. To fix errors related to this, you should delete these chunks in the plugin folder.
 - $ If you recreate the world often, you should also delete the world folder in the plugin to avoid errors with torches.
 - $ Due to some optimizations in the plugin, you will not be able to use some torches as safe blocks.
