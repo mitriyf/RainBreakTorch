@@ -1,6 +1,5 @@
 package ru.mitriyf.rainbreaktorch.values;
 
-import com.google.common.collect.ImmutableList;
 import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -27,9 +26,7 @@ import ru.mitriyf.rainbreaktorch.utils.colors.impl.LegacyColorizer;
 import ru.mitriyf.rainbreaktorch.utils.colors.impl.MiniMessageColorizer;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -167,7 +164,9 @@ public class Values {
             }
             try {
                 World world = plugin.getServer().getWorld(worldString);
-                worlds.add(world);
+                if (world != null) {
+                    worlds.add(world);
+                }
             } catch (Exception e) {
                 logger.warning("Error in worlds.list " + worldString + ": " + e);
             }
@@ -300,12 +299,12 @@ public class Values {
         return new Action(type, matcher.group(2).trim());
     }
 
-    public List<Action> getActionList(List<String> actionStrings) {
-        ImmutableList.Builder<Action> actionListBuilder = ImmutableList.builder();
+    private List<Action> getActionList(List<String> actionStrings) {
+        List<Action> actionListBuilder = new ArrayList<>();
         for (String actionString : actionStrings) {
             actionListBuilder.add(fromString(actionString));
         }
-        return actionListBuilder.build();
+        return Collections.unmodifiableList(actionListBuilder);
     }
 
     private boolean checkBooleanRedstoneTorch(String torch) {
